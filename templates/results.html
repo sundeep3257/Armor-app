@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results</title>
+</head>
+<body>
+    <h1>Analysis Results</h1>
+    <p>Here is the plot of your Range of Motion analysis:</p>
+    <img src="{{ url_for('static', filename='uploads/ROM_angle_plot.png') }}" alt="ROM Plot">
+
+    <p><a href="{{ url_for('download_csv') }}">Download Angle Data CSV</a></p>
+</body>
+</html>
