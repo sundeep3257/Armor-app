@@ -65,6 +65,10 @@ def analyze_video(video_path):
         if not success:
             break
 
+        height, width = img.shape[:2]
+        new_dimensions = (width // 8, height // 8)
+        img = cv2.resize(img, new_dimensions)
+
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         results = pose.process(imgRGB)
 
