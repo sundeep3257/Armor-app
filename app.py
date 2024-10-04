@@ -161,6 +161,9 @@ def download_csv():
     directory = os.path.join(app.root_path, 'static', 'uploads')
     return send_from_directory(directory=directory, path=csv_filename, as_attachment=True)
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 if __name__ == "__main__":
     #app.run(debug=True)
     app.run()
