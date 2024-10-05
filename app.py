@@ -38,36 +38,25 @@ def upload_file():
     return redirect(url_for('index'))
 
 # Function to analyze the video (Pose estimation and plotting)
-def analyze_video(video_path, target_fps=15):
+def analyze_video(video_path):
     # Initialize Mediapipe pose estimator
     mpDraw = mp.solutions.drawing_utils
     mpPose = mp.solutions.pose
     pose = mpPose.Pose()
 
     # Set video parameters
-    joint_a = 14  # Indices for joints (zero-based for Python)
-    joint_b = 12
-    joint_c = 24
+    joint_a = "14"
+    joint_b = "12"
+    joint_c = "24"
 
     # File paths
     armor_output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'armor_output.csv')
     plot_output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'ROM_angle_plot.png')
 
-    # Video capture and properties
+    # Video capture and pose analysis logic
     cap = cv2.VideoCapture(video_path)
     phrases_dict = {str(i): [] for i in range(1, 33)}
 
-    # Get original video properties
-    original_fps = cap.get(cv2.CAP_PROP_FPS)
-    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-    # Create VideoWriter for standardized output video
-    output_video_path = os.path.join(app.config['UPLOAD_FOLDER'], 'standardized_output_video.mp4')
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for .mp4
-    out = cv2.VideoWriter(output_video_path, fourcc, target_fps, (frame_width, frame_height))
-
-    frame_data = []  # To store landmark data
     frame_count = 0
 
     while cap.isOpened():
@@ -78,11 +67,8 @@ def analyze_video(video_path, target_fps=15):
         # Resize the frame to 25% of its original size
         img = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)
 
-        # Write the resized frame to the output video
-        out.write(img)
-
-        # Process every 2nd frame for efficiency
-        if frame_count % int(original_fps / target_fps) == 0:  # Adjust based on original FPS
+        # Process every 30th frame for efficiency
+        if frame_count % 30 == 0:
             imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             results = pose.process(imgRGB)
 
@@ -101,7 +87,6 @@ def analyze_video(video_path, target_fps=15):
         frame_count += 1
 
     cap.release()
-    out.release()
 
     # Process captured data into CSV
     if any(len(phrases) > 0 for phrases in phrases_dict.values()):
