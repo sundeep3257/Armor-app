@@ -45,9 +45,9 @@ def analyze_video(video_path):
     pose = mpPose.Pose()
 
     # Set video parameters
-    joint_a = "14"
-    joint_b = "12"
-    joint_c = "24"
+    joint_a = 14  # Indices for joints (zero-based for Python)
+    joint_b = 12
+    joint_c = 24
 
     # File paths
     armor_output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'armor_output.csv')
@@ -55,7 +55,6 @@ def analyze_video(video_path):
 
     # Video capture and pose analysis logic
     cap = cv2.VideoCapture(video_path)
-    phrases_dict = {str(i): [] for i in range(1, 33)}
     frame_data = []  # To store landmark data
 
     frame_count = 0
@@ -106,14 +105,21 @@ def analyze_video(video_path):
         # Calculate angles using vectorized operations
         armor_output = []
         for i in range(max_frames):
-            joint_a_x, joint_b_x, joint_c_x = landmark_df.loc[i, [f"x{joint_a}", f"x{joint_b}", f"x{joint_c}"]]
-            joint_a_y, joint_b_y, joint_c_y = landmark_df.loc[i, [f"y{joint_a}", f"y{joint_b}", f"y{joint_c}"]]
+            # Get x and y coordinates for the three joints of interest
+            joint_a_x, joint_a_y = landmark_df.loc[i, [f"x{joint_a}", f"y{joint_a}"]]
+            joint_b_x, joint_b_y = landmark_df.loc[i, [f"x{joint_b}", f"y{joint_b}"]]
+            joint_c_x, joint_c_y = landmark_df.loc[i, [f"x{joint_c}", f"y{joint_c}"]]
 
-            BA = np.array([joint_a_x - joint_b_x, joint_a_y - joint_b_y])
-            BC = np.array([joint_c_x - joint_b_x, joint_c_y - joint_b_y])
-            dot_product = np.dot(BA, BC)
-            magnitude_BA = np.linalg.norm(BA)
-            magnitude_BC = np.linalg.norm(BC)
+            # Calculate the vectors BA and BC
+            BAx = joint_a_x - joint_b_x
+            BAy = joint_a_y - joint_b_y
+            BCx = joint_c_x - joint_b_x
+            BCy = joint_c_y - joint_b_y
+
+            # Calculate the angle
+            dot_product = BAx * BCx + BAy * BCy
+            magnitude_BA = math.sqrt(BAx ** 2 + BAy ** 2)
+            magnitude_BC = math.sqrt(BCx ** 2 + BCy ** 2)
 
             if magnitude_BA > 0 and magnitude_BC > 0:
                 theta_radians = math.acos(dot_product / (magnitude_BA * magnitude_BC))
@@ -121,8 +127,9 @@ def analyze_video(video_path):
             else:
                 theta_degrees = None
 
-            armor_output.append([i + 1, theta_degrees])
+            armor_output.append([i + 1, theta_degrees])  # Store frame number and angle
 
+        # Create DataFrame for angles
         task1_angle_df = pd.DataFrame(armor_output, columns=["Time", "Degrees"])
         task1_angle_df.to_csv(armor_output_path, index=False)
 
@@ -134,7 +141,6 @@ def analyze_video(video_path):
         plt.ylabel("Angle of Interest (Degrees)")
         sns.set_style("whitegrid")
         plt.savefig(plot_output_path)
-
 
 # Route to display the results
 @app.route('/results')
