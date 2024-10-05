@@ -65,6 +65,10 @@ def analyze_video(video_path):
         if not success:
             break
 
+        # Make it go FASTER
+        if frame_count % 10 != 0:
+            frame_count += 1
+            continue
         height, width = img.shape[:2]
         new_dimensions = (width // 8, height // 8)
         img = cv2.resize(img, new_dimensions)
