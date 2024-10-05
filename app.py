@@ -59,7 +59,7 @@ def analyze_video(video_path):
 
     # Determine frame skip rate
     original_fps = cap.get(cv2.CAP_PROP_FPS)
-    target_fps = 15
+    target_fps = 8
     frame_skip_rate = abs(original_fps / target_fps)
 
     frame_count = 0
