@@ -57,6 +57,11 @@ def analyze_video(video_path):
     cap = cv2.VideoCapture(video_path)
     phrases_dict = {str(i): [] for i in range(1, 33)}
 
+    # Determine frame skip rate
+    original_fps = cap.get(cv2.CAP_PROP_FPS)
+    target_fps = 15
+    frame_skip_rate = abs(original_fps / target_fps)
+
     frame_count = 0
 
     while cap.isOpened():
@@ -67,8 +72,8 @@ def analyze_video(video_path):
         # Resize the frame to 25% of its original size
         img = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)
 
-        # Process every 30th frame for efficiency
-        if frame_count % 30 == 0:
+        # Process every 2nd frame for efficiency
+        if frame_count % frame_skip_rate == 0:
             imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             results = pose.process(imgRGB)
 
