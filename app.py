@@ -56,6 +56,7 @@ def analyze_video(video_path):
     # Video capture and pose analysis logic
     cap = cv2.VideoCapture(video_path)
     phrases_dict = {str(i): [] for i in range(1, 33)}
+    frame_data = []  # To store landmark data
 
     frame_count = 0
 
@@ -75,65 +76,50 @@ def analyze_video(video_path):
             if results.pose_landmarks:
                 mpDraw.draw_landmarks(img, results.pose_landmarks, mpPose.POSE_CONNECTIONS)
 
-                # Extract landmarks in a single loop
-                for id, lm in enumerate(results.pose_landmarks.landmark):
-                    h, w, c = img.shape
-                    cx, cy = int(lm.x * w), int(lm.y * h)
-                    phrase = f"{id} x: {lm.x:.8f} y: {lm.y:.8f} z: {lm.z:.8f} visibility: {lm.visibility:.8f}"
-                    start_number = phrase.split(' ')[0]
-                    if start_number in phrases_dict:
-                        phrases_dict[start_number].append(phrase)
+                # Collect landmark data
+                landmarks = [lm for lm in results.pose_landmarks.landmark]
+                frame_data.append(landmarks)
 
         frame_count += 1
 
     cap.release()
 
     # Process captured data into CSV
-    if any(len(phrases) > 0 for phrases in phrases_dict.values()):
-        max_instances = max(len(phrases) for phrases in phrases_dict.values())
-        table_data = [['' for _ in range(32)] for _ in range(max_instances)]
+    if frame_data:
+        max_frames = len(frame_data)
+        num_landmarks = len(frame_data[0])
 
-        for row in range(32):
-            str_row = str(row + 1)
-            if str_row in phrases_dict:
-                for i, phrase in enumerate(phrases_dict[str_row]):
-                    if i < max_instances:
-                        table_data[i][row] = phrase
+        # Create a DataFrame for all frames and landmarks
+        landmark_array = np.zeros((max_frames, num_landmarks * 3))  # 3 values (x, y, z) per landmark
 
-        # Convert table_data to a DataFrame
-        raw_data = pd.DataFrame(table_data)
+        for i, landmarks in enumerate(frame_data):
+            for j, lm in enumerate(landmarks):
+                landmark_array[i, j * 3] = lm.x
+                landmark_array[i, j * 3 + 1] = lm.y
+                landmark_array[i, j * 3 + 2] = lm.z
 
-        formatted_output = pd.DataFrame(" ", index=np.arange(len(raw_data)), columns=[f"x{i}" for i in range(1, 33)] + [f"y{i}" for i in range(1, 33)])
+        # Convert to DataFrame
+        landmark_df = pd.DataFrame(landmark_array, columns=[f"x{j}" for j in range(num_landmarks)] + 
+                                                          [f"y{j}" for j in range(num_landmarks)] + 
+                                                          [f"z{j}" for j in range(num_landmarks)])
 
-        for j in range(raw_data.shape[1]):
-            for i in range(raw_data.shape[0]):
-                raw_cell = str(raw_data.iloc[i, j]).split(" ")
-                if len(raw_cell) >= 6:
-                    number = int(raw_cell[0])
-                    x_value = float(raw_cell[2])
-                    y_value = float(raw_cell[4])
-                    row_to_fill = formatted_output[formatted_output[f"x{number}"] == " "].index[0]
-                    formatted_output.at[row_to_fill, f"x{number}"] = x_value
-                    formatted_output.at[row_to_fill, f"y{number}"] = y_value
-
-        # Calculate angles and save to CSV
+        # Calculate angles using vectorized operations
         armor_output = []
-        formatted_output.fillna(0, inplace=True)  # Replace NaNs with 0 for calculations
-        for i in range(len(formatted_output)):
-            joint_a_x, joint_b_x, joint_c_x = formatted_output.loc[i, [f"x{joint_a}", f"x{joint_b}", f"x{joint_c}"]].astype(float)
-            joint_a_y, joint_b_y, joint_c_y = formatted_output.loc[i, [f"y{joint_a}", f"y{joint_b}", f"y{joint_c}"]].astype(float)
+        for i in range(max_frames):
+            joint_a_x, joint_b_x, joint_c_x = landmark_df.loc[i, [f"x{joint_a}", f"x{joint_b}", f"x{joint_c}"]]
+            joint_a_y, joint_b_y, joint_c_y = landmark_df.loc[i, [f"y{joint_a}", f"y{joint_b}", f"y{joint_c}"]]
 
-            BAx, BAy = joint_a_x - joint_b_x, joint_a_y - joint_b_y
-            BCx, BCy = joint_c_x - joint_b_x, joint_c_y - joint_b_y
-            dot_product = BAx * BCx + BAy * BCy
-            magnitude_BA = math.sqrt(BAx ** 2 + BAy ** 2)
-            magnitude_BC = math.sqrt(BCx ** 2 + BCy ** 2)
+            BA = np.array([joint_a_x - joint_b_x, joint_a_y - joint_b_y])
+            BC = np.array([joint_c_x - joint_b_x, joint_c_y - joint_b_y])
+            dot_product = np.dot(BA, BC)
+            magnitude_BA = np.linalg.norm(BA)
+            magnitude_BC = np.linalg.norm(BC)
 
-            # Avoid division by zero
-            theta_degrees = None
             if magnitude_BA > 0 and magnitude_BC > 0:
                 theta_radians = math.acos(dot_product / (magnitude_BA * magnitude_BC))
                 theta_degrees = math.degrees(theta_radians)
+            else:
+                theta_degrees = None
 
             armor_output.append([i + 1, theta_degrees])
 
