@@ -45,53 +45,46 @@ def analyze_video(video_path):
     pose = mpPose.Pose()
 
     # Set video parameters
-    joint_a = "13"
-    joint_b = "11"
-    joint_c = "23"
+    joint_a = "14"
+    joint_b = "12"
+    joint_c = "24"
 
     # File paths
-    csv_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'test_output.csv')
-    formatted_output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'formatted_output.csv')
     armor_output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'armor_output.csv')
     plot_output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'ROM_angle_plot.png')
 
     # Video capture and pose analysis logic
     cap = cv2.VideoCapture(video_path)
-    pTime = 0
     phrases_dict = {str(i): [] for i in range(1, 33)}
 
     frame_count = 0
+
     while cap.isOpened():
         success, img = cap.read()
         if not success:
             break
 
-        # Make it go FASTER
-        if frame_count % 10 != 0:
-            frame_count += 1
-            continue
-        height, width = img.shape[:2]
-        new_dimensions = (width // 8, height // 8)
-        img = cv2.resize(img, new_dimensions)
+        # Resize the frame to 50% of its original size
+        img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
 
-        imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        results = pose.process(imgRGB)
+        # Process every 2nd frame for efficiency
+        if frame_count % 2 == 0:
+            imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            results = pose.process(imgRGB)
 
-        if results.pose_landmarks:
-            mpDraw.draw_landmarks(img, results.pose_landmarks, mpPose.POSE_CONNECTIONS)
+            if results.pose_landmarks:
+                mpDraw.draw_landmarks(img, results.pose_landmarks, mpPose.POSE_CONNECTIONS)
 
-            for id, lm in enumerate(results.pose_landmarks.landmark):
-                h, w, c = img.shape
-                cx, cy = int(lm.x * w), int(lm.y * h)
-                phrase = f"{id} x: {lm.x:.8f} y: {lm.y:.8f} z: {lm.z:.8f} visibility: {lm.visibility:.8f}"
-                start_number = phrase.split(' ')[0]
-                if start_number in phrases_dict:
-                    phrases_dict[start_number].append(phrase)
+                # Extract landmarks in a single loop
+                for id, lm in enumerate(results.pose_landmarks.landmark):
+                    h, w, c = img.shape
+                    cx, cy = int(lm.x * w), int(lm.y * h)
+                    phrase = f"{id} x: {lm.x:.8f} y: {lm.y:.8f} z: {lm.z:.8f} visibility: {lm.visibility:.8f}"
+                    start_number = phrase.split(' ')[0]
+                    if start_number in phrases_dict:
+                        phrases_dict[start_number].append(phrase)
 
-        # Calculate FPS (Optional)
-        cTime = time.time()
-        fps = 1 / (cTime - pTime)
-        pTime = cTime
+        frame_count += 1
 
     cap.release()
 
@@ -123,14 +116,12 @@ def analyze_video(video_path):
                     formatted_output.at[row_to_fill, f"x{number}"] = x_value
                     formatted_output.at[row_to_fill, f"y{number}"] = y_value
 
-        # No longer saving to a CSV file
-        # formatted_output.to_csv(formatted_output_path, index=False)
-
         # Calculate angles and save to CSV
         armor_output = []
+        formatted_output.fillna(0, inplace=True)  # Replace NaNs with 0 for calculations
         for i in range(len(formatted_output)):
-            joint_a_x, joint_b_x, joint_c_x = formatted_output.loc[i, [f"x{joint_a}", f"x{joint_b}", f"x{joint_c}"]]
-            joint_a_y, joint_b_y, joint_c_y = formatted_output.loc[i, [f"y{joint_a}", f"y{joint_b}", f"y{joint_c}"]]
+            joint_a_x, joint_b_x, joint_c_x = formatted_output.loc[i, [f"x{joint_a}", f"x{joint_b}", f"x{joint_c}"]].astype(float)
+            joint_a_y, joint_b_y, joint_c_y = formatted_output.loc[i, [f"y{joint_a}", f"y{joint_b}", f"y{joint_c}"]].astype(float)
 
             BAx, BAy = joint_a_x - joint_b_x, joint_a_y - joint_b_y
             BCx, BCy = joint_c_x - joint_b_x, joint_c_y - joint_b_y
@@ -138,11 +129,11 @@ def analyze_video(video_path):
             magnitude_BA = math.sqrt(BAx ** 2 + BAy ** 2)
             magnitude_BC = math.sqrt(BCx ** 2 + BCy ** 2)
 
+            # Avoid division by zero
+            theta_degrees = None
             if magnitude_BA > 0 and magnitude_BC > 0:
                 theta_radians = math.acos(dot_product / (magnitude_BA * magnitude_BC))
                 theta_degrees = math.degrees(theta_radians)
-            else:
-                theta_degrees = None
 
             armor_output.append([i + 1, theta_degrees])
 
@@ -157,6 +148,7 @@ def analyze_video(video_path):
         plt.ylabel("Angle of Interest (Degrees)")
         sns.set_style("whitegrid")
         plt.savefig(plot_output_path)
+
 
 # Route to display the results
 @app.route('/results')
