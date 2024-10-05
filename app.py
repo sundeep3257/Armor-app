@@ -45,91 +45,127 @@ def analyze_video(video_path):
     pose = mpPose.Pose()
 
     # Set video parameters
-    joint_a = 14  # Indices for joints (zero-based for Python)
-    joint_b = 12
-    joint_c = 24
+    joint_a = "13"
+    joint_b = "11"
+    joint_c = "23"
+    joint_a = "14"
+    joint_b = "12"
+    joint_c = "24"
 
     # File paths
+    csv_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'test_output.csv')
+    formatted_output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'formatted_output.csv')
     armor_output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'armor_output.csv')
     plot_output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'ROM_angle_plot.png')
 
     # Video capture and pose analysis logic
     cap = cv2.VideoCapture(video_path)
-    frame_data = []  # To store landmark data
+    pTime = 0
+    phrases_dict = {str(i): [] for i in range(1, 33)}
 
     frame_count = 0
-
     while cap.isOpened():
         success, img = cap.read()
         if not success:
             break
 
+        # Make it go FASTER
+        if frame_count % 10 != 0:
+            frame_count += 1
+            continue
+        height, width = img.shape[:2]
+        new_dimensions = (width // 8, height // 8)
+        img = cv2.resize(img, new_dimensions)
+        imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        results = pose.process(imgRGB)
+        if results.pose_landmarks:
+            mpDraw.draw_landmarks(img, results.pose_landmarks, mpPose.POSE_CONNECTIONS)
+            for id, lm in enumerate(results.pose_landmarks.landmark):
+                h, w, c = img.shape
+                cx, cy = int(lm.x * w), int(lm.y * h)
+                phrase = f"{id} x: {lm.x:.8f} y: {lm.y:.8f} z: {lm.z:.8f} visibility: {lm.visibility:.8f}"
+                start_number = phrase.split(' ')[0]
+                if start_number in phrases_dict:
+                    phrases_dict[start_number].append(phrase)
+        # Calculate FPS (Optional)
+        cTime = time.time()
+        fps = 1 / (cTime - pTime)
+        pTime = cTime
         # Resize the frame to 50% of its original size
         img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
-
         # Process every 2nd frame for efficiency
         if frame_count % 2 == 0:
             imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             results = pose.process(imgRGB)
-
             if results.pose_landmarks:
                 mpDraw.draw_landmarks(img, results.pose_landmarks, mpPose.POSE_CONNECTIONS)
-
-                # Collect landmark data
-                landmarks = [lm for lm in results.pose_landmarks.landmark]
-                frame_data.append(landmarks)
-
+                # Extract landmarks in a single loop
+                for id, lm in enumerate(results.pose_landmarks.landmark):
+                    h, w, c = img.shape
+                    cx, cy = int(lm.x * w), int(lm.y * h)
+                    phrase = f"{id} x: {lm.x:.8f} y: {lm.y:.8f} z: {lm.z:.8f} visibility: {lm.visibility:.8f}"
+                    start_number = phrase.split(' ')[0]
+                    if start_number in phrases_dict:
+                        phrases_dict[start_number].append(phrase)
         frame_count += 1
 
     cap.release()
 
     # Process captured data into CSV
-    if frame_data:
-        max_frames = len(frame_data)
-        num_landmarks = len(frame_data[0])
+    if any(len(phrases) > 0 for phrases in phrases_dict.values()):
+        max_instances = max(len(phrases) for phrases in phrases_dict.values())
+        table_data = [['' for _ in range(32)] for _ in range(max_instances)]
 
-        # Create a DataFrame for all frames and landmarks
-        landmark_array = np.zeros((max_frames, num_landmarks * 3))  # 3 values (x, y, z) per landmark
+        for row in range(32):
+            str_row = str(row + 1)
+            if str_row in phrases_dict:
+                for i, phrase in enumerate(phrases_dict[str_row]):
+                    if i < max_instances:
+                        table_data[i][row] = phrase
 
-        for i, landmarks in enumerate(frame_data):
-            for j, lm in enumerate(landmarks):
-                landmark_array[i, j * 3] = lm.x
-                landmark_array[i, j * 3 + 1] = lm.y
-                landmark_array[i, j * 3 + 2] = lm.z
+        # Convert table_data to a DataFrame
+        raw_data = pd.DataFrame(table_data)
 
-        # Convert to DataFrame
-        landmark_df = pd.DataFrame(landmark_array, columns=[f"x{j}" for j in range(num_landmarks)] + 
-                                                          [f"y{j}" for j in range(num_landmarks)] + 
-                                                          [f"z{j}" for j in range(num_landmarks)])
+        formatted_output = pd.DataFrame(" ", index=np.arange(len(raw_data)), columns=[f"x{i}" for i in range(1, 33)] + [f"y{i}" for i in range(1, 33)])
 
-        # Calculate angles using vectorized operations
+        for j in range(raw_data.shape[1]):
+            for i in range(raw_data.shape[0]):
+                raw_cell = str(raw_data.iloc[i, j]).split(" ")
+                if len(raw_cell) >= 6:
+                    number = int(raw_cell[0])
+                    x_value = float(raw_cell[2])
+                    y_value = float(raw_cell[4])
+                    row_to_fill = formatted_output[formatted_output[f"x{number}"] == " "].index[0]
+                    formatted_output.at[row_to_fill, f"x{number}"] = x_value
+                    formatted_output.at[row_to_fill, f"y{number}"] = y_value
+
+        # No longer saving to a CSV file
+        # formatted_output.to_csv(formatted_output_path, index=False)
+        # Calculate angles and save to CSV
         armor_output = []
-        for i in range(max_frames):
-            # Get x and y coordinates for the three joints of interest
-            joint_a_x, joint_a_y = landmark_df.loc[i, [f"x{joint_a}", f"y{joint_a}"]]
-            joint_b_x, joint_b_y = landmark_df.loc[i, [f"x{joint_b}", f"y{joint_b}"]]
-            joint_c_x, joint_c_y = landmark_df.loc[i, [f"x{joint_c}", f"y{joint_c}"]]
+        formatted_output.fillna(0, inplace=True)  # Replace NaNs with 0 for calculations
+        for i in range(len(formatted_output)):
+            joint_a_x, joint_b_x, joint_c_x = formatted_output.loc[i, [f"x{joint_a}", f"x{joint_b}", f"x{joint_c}"]]
+            joint_a_y, joint_b_y, joint_c_y = formatted_output.loc[i, [f"y{joint_a}", f"y{joint_b}", f"y{joint_c}"]]
+            joint_a_x, joint_b_x, joint_c_x = formatted_output.loc[i, [f"x{joint_a}", f"x{joint_b}", f"x{joint_c}"]].astype(float)
+            joint_a_y, joint_b_y, joint_c_y = formatted_output.loc[i, [f"y{joint_a}", f"y{joint_b}", f"y{joint_c}"]].astype(float)
 
-            # Calculate the vectors BA and BC
-            BAx = joint_a_x - joint_b_x
-            BAy = joint_a_y - joint_b_y
-            BCx = joint_c_x - joint_b_x
-            BCy = joint_c_y - joint_b_y
-
-            # Calculate the angle
+            BAx, BAy = joint_a_x - joint_b_x, joint_a_y - joint_b_y
+            BCx, BCy = joint_c_x - joint_b_x, joint_c_y - joint_b_y
             dot_product = BAx * BCx + BAy * BCy
             magnitude_BA = math.sqrt(BAx ** 2 + BAy ** 2)
             magnitude_BC = math.sqrt(BCx ** 2 + BCy ** 2)
 
+            # Avoid division by zero
+            theta_degrees = None
             if magnitude_BA > 0 and magnitude_BC > 0:
                 theta_radians = math.acos(dot_product / (magnitude_BA * magnitude_BC))
                 theta_degrees = math.degrees(theta_radians)
             else:
                 theta_degrees = None
 
-            armor_output.append([i + 1, theta_degrees])  # Store frame number and angle
+            armor_output.append([i + 1, theta_degrees])
 
-        # Create DataFrame for angles
         task1_angle_df = pd.DataFrame(armor_output, columns=["Time", "Degrees"])
         task1_angle_df.to_csv(armor_output_path, index=False)
 
