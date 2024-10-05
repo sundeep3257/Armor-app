@@ -171,5 +171,5 @@ def download_csv():
     return send_from_directory(directory=directory, path=csv_filename, as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(debug=True)
-    #app.run()
+    #app.run(debug=True)
+    app.run()
