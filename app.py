@@ -64,8 +64,8 @@ def analyze_video(video_path):
         if not success:
             break
 
-        # Resize the frame to 50% of its original size
-        img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+        # Resize the frame to 15% of its original size
+        img = cv2.resize(img, (0, 0), fx=0.15, fy=0.15)
 
         # Process every 2nd frame for efficiency
         if frame_count % 2 == 0:
