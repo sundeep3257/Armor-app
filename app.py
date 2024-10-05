@@ -45,9 +45,9 @@ def analyze_video(video_path):
     pose = mpPose.Pose()
 
     # Set video parameters
-    joint_a = "14"
-    joint_b = "12"
-    joint_c = "24"
+    joint_a = "13"
+    joint_b = "11"
+    joint_c = "23"
 
     # File paths
     csv_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'test_output.csv')
