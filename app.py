@@ -60,6 +60,7 @@ def analyze_video(video_path):
     pTime = 0
     phrases_dict = {str(i): [] for i in range(1, 33)}
 
+    frame_count = 0
     while cap.isOpened():
         success, img = cap.read()
         if not success:
