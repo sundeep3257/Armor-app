@@ -29,10 +29,10 @@
             max-width: 600px;
         }
 
-        h1 {
+        h1, h2 {
             margin-bottom: 20px;
-            font-size: 2.5em;
             color: #FFF;
+            font-size: 2em; /* Adjusted font size */
         }
 
         input[type="file"],
@@ -46,7 +46,7 @@
         input[type="file"] {
             background-color: #000;
             color: #FFF;
-            margin-bottom: 40px; /* Add more space below the file input */
+            margin-bottom: 20px;
         }
 
         button {
@@ -58,7 +58,8 @@
             color: #FFF;
             cursor: pointer;
             transition: background-color 0.3s ease;
-            margin-top: 30px; /* Add more space above the button */
+            margin-top: 10px;
+            display:inline-block;
         }
 
         button:hover {
@@ -74,9 +75,9 @@
         .joint-inputs {
             display: flex;
             justify-content: center;
-            align-items: center; /* Center items vertically */
-            margin-bottom: 30px; /* Add more space below the joint input section */
-            gap: 10px; /* Optional: Add horizontal space between joint input items if desired */
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
         }
 
         .joint-inputs label,
@@ -86,20 +87,44 @@
 
         .joint-inputs div {
             display: flex;
-            align-items: center; /* Center label and input vertically */
+            align-items: center;
         }
 
+        video {
+            width: 100%;
+            max-width: 500px;
+            margin: 10px auto;
+        }
+
+        .rec-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        #stop-record-btn {
+            display: none;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1>Upload Your Video</h1>
-        <form method="POST" enctype="multipart/form-data" action="/upload">
+        <h1>Upload or Record Your Video</h1>
+        <form id="upload-form" method="POST" enctype="multipart/form-data" action="/upload">
             <label for="video">Choose a video:</label>
-            <input type="file" id="video" name="video" accept="video/*" required>
+            <input type="file" id="video" name="video" accept="video/*">
 
-            <div class="joint-inputs" style="margin-top: 20px;">
+            <div class="rec-buttons">
+                <button id="start-record-btn" type="button">Record Video</button>
+                <button id="stop-record-btn" type="button">Stop Recording</button>
+            </div>
+
+            <video id="preview" autoplay muted></video>
+            <video id="recorded" controls style="display: none;"></video>
+
+            <h2>Input Joints of Interest</h2>
+            <div class="joint-inputs">
                 <div>
                     <label for="joint_a">Joint A:</label>
                     <input type="number" id="joint_a" name="joint_a" value="14" min="0" max="32" required>
@@ -116,7 +141,61 @@
 
             <button type="submit">Analyze Video</button>
         </form>
+
     </div>
+
+    <script>
+        const startRecordBtn = document.getElementById('start-record-btn');
+        const stopRecordBtn = document.getElementById('stop-record-btn');
+        const preview = document.getElementById('preview');
+        const recorded = document.getElementById('recorded');
+        const uploadForm = document.getElementById('upload-form');
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        async function startRecording() {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            preview.srcObject = stream;
+
+            recordedChunks = [];
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = handleRecordingStop;
+            mediaRecorder.start();
+
+            startRecordBtn.style.display = 'none';
+            stopRecordBtn.style.display = 'block';
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            preview.srcObject.getTracks().forEach(track => track.stop());
+
+            startRecordBtn.style.display = 'block';
+            stopRecordBtn.style.display = 'none';
+        }
+
+        function handleRecordingStop() {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            recorded.src = URL.createObjectURL(blob);
+            recorded.style.display = 'block';
+            preview.style.display = 'none';
+
+            const file = new File([blob], 'recorded_video.webm', { type: 'video/webm' });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            const videoInput = document.getElementById('video');
+            videoInput.files = dataTransfer.files;
+        }
+
+        startRecordBtn.addEventListener('click', startRecording);
+        stopRecordBtn.addEventListener('click', stopRecording);
+    </script>
 </body>
 
 </html>
