@@ -1,15 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analysis Results</title>
-</head>
-<body>
-    <h1>Analysis Results</h1>
-    <p>Here is the plot of your Range of Motion analysis:</p>
-    <img src="{{ url_for('static', filename='uploads/ROM_angle_plot.png') }}" alt="ROM Plot">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #FFF;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
 
-    <p><a href="{{ url_for('download_csv') }}">Download Angle Data CSV</a></p>
+        .container {
+            background-color: #750014ff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        h1 {
+            color: #FFF;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        .highlight {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 20px 0 40px 0; /* Add more space below */
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        a {
+            color: #FFF;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 2px solid #FFF;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        a:hover {
+            background-color: #FFF;
+            color: #750014ff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Analysis Results</h1>
+        <img src="{{ url_for('static', filename='uploads/ROM_angle_plot.png') }}" alt="ROM Plot">
+        <p class="highlight">Peak Angle: {{ peak_angle }}°</p>
+        <p><a href="{{ url_for('download_csv') }}">Download Angle Data CSV</a></p>
+    </div>
 </body>
+
 </html>
