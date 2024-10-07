@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,8 +9,8 @@
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #FFFF00;
-            color: #FFFFFF;
+            background-color: #000;
+            color: #FFF;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -24,60 +25,98 @@
             border-radius: 10px;
             padding: 40px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 80%;
+            max-width: 600px;
         }
 
         h1 {
             margin-bottom: 20px;
             font-size: 2.5em;
+            color: #FFF;
         }
 
         input[type="file"],
-        input[type="number"],
-        button {
+        input[type="number"] {
             padding: 10px;
             font-size: 1.1em;
             border-radius: 5px;
             border: none;
-            margin-bottom: 20px;
         }
 
         input[type="file"] {
-            background-color: #000000ff;
-            color: #FFFFFF;
-        }
-
-        input[type="number"] {
-            width: 60px;
-            margin-right: 10px;
+            background-color: #000;
+            color: #FFF;
+            margin-bottom: 40px; /* Add more space below the file input */
         }
 
         button {
-            background-color: #4285f4ff;
-            color: #FFFFFF;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            border: 2px solid #FFF;
+            background-color: transparent;
+            color: #FFF;
             cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 30px; /* Add more space above the button */
         }
 
         button:hover {
-            background-color: #375cbbff;
+            background-color: #FFF;
+            color: #750014ff;
         }
+
+        label {
+            display: block;
+            font-size: 1.2em;
+        }
+
+        .joint-inputs {
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Center items vertically */
+            margin-bottom: 30px; /* Add more space below the joint input section */
+            gap: 10px; /* Optional: Add horizontal space between joint input items if desired */
+        }
+
+        .joint-inputs label,
+        .joint-inputs input {
+            margin-right: 10px;
+        }
+
+        .joint-inputs div {
+            display: flex;
+            align-items: center; /* Center label and input vertically */
+        }
+
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Upload Your Video</h1>
         <form method="POST" enctype="multipart/form-data" action="/upload">
-            <label for="video">Choose a video:</label><br>
-            <input type="file" id="video" name="video" accept="video/*" required><br><br>
+            <label for="video">Choose a video:</label>
+            <input type="file" id="video" name="video" accept="video/*" required>
 
-            <label for="joint_a">Joint A:</label>
-            <input type="number" id="joint_a" name="joint_a" value="14" min="0" max="32" required>
-            <label for="joint_b">Joint B:</label>
-            <input type="number" id="joint_b" name="joint_b" value="12" min="0" max="32" required>
-            <label for="joint_c">Joint C:</label>
-            <input type="number" id="joint_c" name="joint_c" value="24" min="0" max="32" required><br><br>
+            <div class="joint-inputs" style="margin-top: 20px;">
+                <div>
+                    <label for="joint_a">Joint A:</label>
+                    <input type="number" id="joint_a" name="joint_a" value="14" min="0" max="32" required>
+                </div>
+                <div>
+                    <label for="joint_b">Joint B:</label>
+                    <input type="number" id="joint_b" name="joint_b" value="12" min="0" max="32" required>
+                </div>
+                <div>
+                    <label for="joint_c">Joint C:</label>
+                    <input type="number" id="joint_c" name="joint_c" value="24" min="0" max="32" required>
+                </div>
+            </div>
 
             <button type="submit">Analyze Video</button>
         </form>
     </div>
 </body>
+
 </html>
