@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify
 import os
 import cv2
 import mediapipe as mp
@@ -40,6 +40,17 @@ def upload_file():
 
             return redirect(url_for('results'))
     return redirect(url_for('index'))
+
+# Route to save recorded video
+@app.route('/record', methods=['POST'])
+def record():
+    if request.method == 'POST':
+        file = request.files['video']
+        if file:
+            video_path = os.path.join(app.config['UPLOAD_FOLDER'], 'recorded_video.webm')
+            file.save(video_path)
+            return jsonify({"video_path": video_path}), 200
+    return jsonify({"error": "Failed to record video"}), 400
 
 # Function to analyze the video (Pose estimation and plotting)
 def analyze_video(video_path, joint_a, joint_b, joint_c):
