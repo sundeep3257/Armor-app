@@ -27,27 +27,26 @@ def index():
 def upload_file():
     if request.method == 'POST':
         file = request.files['video']
+        joint_a = request.form.get('joint_a', '14')  # Default value '14'
+        joint_b = request.form.get('joint_b', '12')  # Default value '12'
+        joint_c = request.form.get('joint_c', '24')  # Default value '24'
+
         if file:
             video_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
             file.save(video_path)
 
-            # Call the analysis function here
-            analyze_video(video_path)
+            # Call the analysis function with custom joints
+            analyze_video(video_path, joint_a, joint_b, joint_c)
 
             return redirect(url_for('results'))
     return redirect(url_for('index'))
 
 # Function to analyze the video (Pose estimation and plotting)
-def analyze_video(video_path):
+def analyze_video(video_path, joint_a, joint_b, joint_c):
     # Initialize Mediapipe pose estimator
     mpDraw = mp.solutions.drawing_utils
     mpPose = mp.solutions.pose
     pose = mpPose.Pose()
-
-    # Set video parameters
-    joint_a = "14"
-    joint_b = "12"
-    joint_c = "24"
 
     # File paths
     armor_output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'armor_output.csv')
@@ -59,7 +58,7 @@ def analyze_video(video_path):
 
     # Determine frame skip rate
     original_fps = cap.get(cv2.CAP_PROP_FPS)
-    target_fps = 8
+    target_fps = 15
     frame_skip_rate = math.ceil(original_fps / target_fps)
 
     frame_count = 0
@@ -154,7 +153,6 @@ def analyze_video(video_path):
         sns.set_style("whitegrid")
         plt.savefig(plot_output_path)
 
-
 # Route to display the results
 @app.route('/results')
 def results():
@@ -168,5 +166,4 @@ def download_csv():
     return send_from_directory(directory=directory, path=csv_filename, as_attachment=True)
 
 if __name__ == "__main__":
-    #app.run(debug=True)
     app.run()
