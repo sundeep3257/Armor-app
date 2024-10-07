@@ -146,7 +146,7 @@ def analyze_video(video_path, joint_a, joint_b, joint_c):
 
         # Plot and save the angle data
         plt.figure(figsize=(10, 6))
-        sns.scatterplot(data=task1_angle_df, x="Time", y="Degrees")
+        sns.scatterplot(data=task1_angle_df, x="Time", y="Degrees", color="#750014ff")  # Set the color here
         plt.title("Range of Motion Quantification")
         plt.xlabel("Frame")
         plt.ylabel("Angle of Interest (Degrees)")
@@ -156,7 +156,14 @@ def analyze_video(video_path, joint_a, joint_b, joint_c):
 # Route to display the results
 @app.route('/results')
 def results():
-    return render_template('results.html')
+    # Path to the CSV file
+    armor_output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'armor_output.csv')
+    # Load the CSV into a DataFrame
+    task1_angle_df = pd.read_csv(armor_output_path)
+    # Find the maximum value in the 'Degrees' column (2nd column)
+    peak_angle = round(task1_angle_df['Degrees'].max(), 2)
+
+    return render_template('results.html', peak_angle=peak_angle)
 
 # Route to serve the CSV file for download
 @app.route('/download_csv')
@@ -166,4 +173,5 @@ def download_csv():
     return send_from_directory(directory=directory, path=csv_filename, as_attachment=True)
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
+    #app.run()
