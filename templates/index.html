@@ -8,8 +8,8 @@
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #000080; /* Navy Blue background */
-            color: #FFFFFF; /* White text for contrast */
+            background-color: #FFFF00;
+            color: #FFFFFF;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -20,7 +20,7 @@
 
         .container {
             text-align: center;
-            background-color: #750014ff; /* Dark red background */
+            background-color: #750014ff;
             border-radius: 10px;
             padding: 40px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
@@ -31,46 +31,53 @@
             font-size: 2.5em;
         }
 
-        input[type="file"] {
-            margin: 20px 0;
+        input[type="file"],
+        input[type="number"],
+        button {
             padding: 10px;
-            border: none;
+            font-size: 1.1em;
             border-radius: 5px;
-            font-size: 1em;
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            background-color: #000000ff;
+            color: #FFFFFF;
+        }
+
+        input[type="number"] {
+            width: 60px;
+            margin-right: 10px;
         }
 
         button {
-            background-color: #4285f4ff; /* Google blue */
-            color: #FFFFFF; /* White text */
-            border: none;
-            border-radius: 5px;
-            padding: 15px 30px;
-            font-size: 1em;
+            background-color: #4285f4ff;
+            color: #FFFFFF;
             cursor: pointer;
-            transition: background-color 0.3s ease;
         }
 
         button:hover {
-            background-color: #357ae8; /* Darker blue on hover */
-        }
-
-        .footer {
-            margin-top: 20px;
-            font-size: 0.8em;
+            background-color: #375cbbff;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Upload Video for Analysis</h1>
-        <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="video" accept="video/mp4,video/x-m4v,video/*" required>
-            <br>
+        <h1>Upload Your Video</h1>
+        <form method="POST" enctype="multipart/form-data" action="/upload">
+            <label for="video">Choose a video:</label><br>
+            <input type="file" id="video" name="video" accept="video/*" required><br><br>
+
+            <label for="joint_a">Joint A:</label>
+            <input type="number" id="joint_a" name="joint_a" value="14" min="0" max="32" required>
+            <label for="joint_b">Joint B:</label>
+            <input type="number" id="joint_b" name="joint_b" value="12" min="0" max="32" required>
+            <label for="joint_c">Joint C:</label>
+            <input type="number" id="joint_c" name="joint_c" value="24" min="0" max="32" required><br><br>
+
             <button type="submit">Analyze Video</button>
         </form>
-        <div class="footer">
-            <p>&copy; ARMOR</p>
-        </div>
     </div>
 </body>
 </html>
