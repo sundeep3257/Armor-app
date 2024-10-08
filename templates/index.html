@@ -59,7 +59,7 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
             margin-top: 10px;
-            display:inline-block;
+            display: inline-block;
         }
 
         button:hover {
@@ -116,8 +116,9 @@
             <input type="file" id="video" name="video" accept="video/*">
 
             <div class="rec-buttons">
-                <button id="start-record-btn" type="button">Record Video</button>
+                <button id="start-record-btn" type="button">Record Video - Camera 1</button>
                 <button id="stop-record-btn" type="button">Stop Recording</button>
+                <button id="toggle-camera-btn" type="button">Record Video - Camera 2</button>
             </div>
 
             <video id="preview" autoplay muted></video>
@@ -147,18 +148,28 @@
     <script>
         const startRecordBtn = document.getElementById('start-record-btn');
         const stopRecordBtn = document.getElementById('stop-record-btn');
+        const toggleCameraBtn = document.getElementById('toggle-camera-btn');
         const preview = document.getElementById('preview');
         const recorded = document.getElementById('recorded');
         const uploadForm = document.getElementById('upload-form');
+
         let mediaRecorder;
         let recordedChunks = [];
+        let useFrontCamera = true;
+        let currentStream;
 
         async function startRecording() {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            preview.srcObject = stream;
+            const constraints = {
+                video: {
+                    facingMode: useFrontCamera ? "user" : "environment"
+                }
+            };
+
+            currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            preview.srcObject = currentStream;
 
             recordedChunks = [];
-            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+            mediaRecorder = new MediaRecorder(currentStream, { mimeType: 'video/webm' });
             mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0) {
                     recordedChunks.push(event.data);
@@ -170,14 +181,21 @@
 
             startRecordBtn.style.display = 'none';
             stopRecordBtn.style.display = 'block';
+            toggleCameraBtn.style.display = 'none';
         }
 
         function stopRecording() {
             mediaRecorder.stop();
-            preview.srcObject.getTracks().forEach(track => track.stop());
+            currentStream.getTracks().forEach(track => track.stop());
 
             startRecordBtn.style.display = 'block';
             stopRecordBtn.style.display = 'none';
+            toggleCameraBtn.style.display = 'block';
+            if (!useFrontCamera) {
+                toggleCameraBtn.textContent = "Record Video - Camera 2";
+            } else {
+                toggleCameraBtn.textContent = "Record Video - Camera 1";
+            }
         }
 
         function handleRecordingStop() {
@@ -193,8 +211,36 @@
             videoInput.files = dataTransfer.files;
         }
 
-        startRecordBtn.addEventListener('click', startRecording);
+        function toggleCamera() {
+            useFrontCamera = !useFrontCamera;
+
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            if (useFrontCamera) {
+                startRecordBtn.textContent = "Record Video - Camera 1";
+                startRecordBtn.style.display = 'block';
+                toggleCameraBtn.style.display = 'none';
+            } else {
+                startRecordBtn.textContent = "Record Video - Camera 2";
+                startRecordBtn.style.display = 'none';
+                toggleCameraBtn.style.display = 'block';
+            }
+
+            startRecording();
+        }
+
+        startRecordBtn.addEventListener('click', () => {
+            toggleCameraBtn.style.display = 'none';
+            startRecording();
+        });
+
         stopRecordBtn.addEventListener('click', stopRecording);
+        toggleCameraBtn.addEventListener('click', () => {
+            startRecordBtn.style.display = 'none';
+            toggleCamera();
+        });
     </script>
 </body>
 
