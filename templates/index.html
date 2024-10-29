@@ -35,15 +35,11 @@
             font-size: 2em; /* Adjusted font size */
         }
 
-        input[type="file"],
-        input[type="number"] {
+        input[type="file"] {
             padding: 10px;
             font-size: 1.1em;
             border-radius: 5px;
             border: none;
-        }
-
-        input[type="file"] {
             background-color: #000;
             color: #FFF;
             margin-bottom: 20px;
@@ -67,33 +63,28 @@
             color: #750014ff;
         }
 
-        label {
-            display: block;
-            font-size: 1.2em;
-        }
-
-        .joint-inputs {
+        .joint-select-buttons {
             display: flex;
             justify-content: center;
-            align-items: center;
+            flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 30px;
         }
 
-        .joint-inputs label,
-        .joint-inputs input {
-            margin-right: 10px;
+        .joint-button {
+            background-color: #750014ff;
+            color: #FFF;
+            border: 2px solid #750014ff;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex: 1 1 28%; /* Ensure buttons take up the required space to align properly */
+            margin: 5px; /* Add margin to control spacing */
         }
 
-        .joint-inputs div {
-            display: flex;
-            align-items: center;
-        }
-
-        video {
-            width: 100%;
-            max-width: 500px;
-            margin: 10px auto;
+        .joint-button.selected {
+            background-color: #FFF;
+            color: #750014ff;
         }
 
         .rec-buttons {
@@ -104,6 +95,12 @@
 
         #stop-record-btn {
             display: none;
+        }
+
+        video {
+            width: 75%; /* Set the video width to 75% of its original size */
+            max-width: 500px; /* Optional: Limit the maximum width */
+            margin: 10px auto;
         }
     </style>
 </head>
@@ -124,28 +121,43 @@
             <video id="preview" autoplay muted></video>
             <video id="recorded" controls style="display: none;"></video>
 
-            <h2>Input Joints of Interest</h2>
-            <div class="joint-inputs">
-                <div>
-                    <label for="joint_a">Joint A:</label>
-                    <input type="number" id="joint_a" name="joint_a" value="14" min="0" max="32" required>
-                </div>
-                <div>
-                    <label for="joint_b">Joint B:</label>
-                    <input type="number" id="joint_b" name="joint_b" value="12" min="0" max="32" required>
-                </div>
-                <div>
-                    <label for="joint_c">Joint C:</label>
-                    <input type="number" id="joint_c" name="joint_c" value="24" min="0" max="32" required>
-                </div>
+            <h2>Select Joint of Interest</h2>
+            <div class="joint-select-buttons">
+                <button type="button" class="joint-button" data-joint="right_knee">Right Knee</button>
+                <button type="button" class="joint-button" data-joint="right_elbow">Right Elbow</button>
+                <button type="button" class="joint-button" data-joint="right_shoulder">Right Shoulder</button>
+                <button type="button" class="joint-button" data-joint="left_knee">Left Knee</button>
+                <button type="button" class="joint-button" data-joint="left_elbow">Left Elbow</button>
+                <button type="button" class="joint-button" data-joint="left_shoulder">Left Shoulder</button>
             </div>
 
             <button type="submit">Analyze Video</button>
         </form>
-
     </div>
 
     <script>
+        const buttons = document.querySelectorAll('.joint-button');
+        let selectedJoint = null;
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                buttons.forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                button.classList.add('selected');
+                selectedJoint = button.getAttribute('data-joint');
+
+                fetch('/select_joint', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `joint=${selectedJoint}`
+                }).then(response => response.json())
+                  .then(data => console.log(data));
+            });
+        });
+
         const startRecordBtn = document.getElementById('start-record-btn');
         const stopRecordBtn = document.getElementById('stop-record-btn');
         const toggleCameraBtn = document.getElementById('toggle-camera-btn');
