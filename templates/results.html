@@ -37,7 +37,7 @@
         }
 
         .highlight {
-            font-size: 1.5em;
+            font-size: 1.3em; /* Adjusted for slightly smaller font size */
             font-weight: bold;
             margin: 20px 0 40px 0; /* Add more space below */
         }
@@ -62,6 +62,32 @@
             background-color: #FFF;
             color: #750014ff;
         }
+
+        .values-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0; /* Add some margin around values container */
+        }
+
+        .value-box {
+            margin: 0 20px; /* Increase space between value boxes */
+            text-align: left;
+        }
+
+        label {
+            font-size: 1em; /* Slightly decreased font size */
+            margin-right: 5px;
+        }
+
+        input[type="text"] {
+            width: 80px; /* Adjusted width for 6 digits */
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em; /* Slightly decreased font size */
+            text-align: center; /* Center-align text in textbox */
+        }
     </style>
 </head>
 
@@ -69,7 +95,16 @@
     <div class="container">
         <h1>Analysis Results</h1>
         <img src="{{ url_for('static', filename='uploads/ROM_angle_plot.png') }}" alt="ROM Plot">
-        <p class="highlight">Peak Angle: {{ peak_angle }}°</p>
+        <div class="values-container">
+            <div class="value-box highlight">
+                <label for="min_value">Minimum Angle:</label>
+                <input type="text" id="min_value" value="{{ min_angle }}°" readonly class="highlight">
+            </div>
+            <div class="value-box highlight">
+                <label for="peak_value">Peak Angle:</label>
+                <input type="text" id="peak_value" value="{{ peak_angle }}°" readonly class="highlight">
+            </div>
+        </div>
         <p><a href="{{ url_for('download_csv') }}">Download Angle Data CSV</a></p>
     </div>
 </body>
