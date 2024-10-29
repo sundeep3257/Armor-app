@@ -17,19 +17,42 @@ UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Joint values dictionary
+JOINT_VALUES = {
+    'right_elbow': {'a': '16', 'b': '14', 'c': '12'},
+    'left_elbow': {'a': '15', 'b': '13', 'c': '11'},
+    'right_shoulder': {'a': '14', 'b': '12', 'c': '24'},
+    'left_shoulder': {'a': '13', 'b': '11', 'c': '23'},
+    'right_knee': {'a': '24', 'b': '26', 'c': '28'},
+    'left_knee': {'a': '23', 'b': '25', 'c': '27'}
+}
+
+selected_joints = None
+
 # Home page route to upload video
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/select_joint', methods=['POST'])
+def select_joint():
+    global selected_joints
+    joint = request.form.get('joint')
+    if joint and joint in JOINT_VALUES:
+        selected_joints = JOINT_VALUES[joint]
+    return jsonify({"success": True, "selected_joint": selected_joints})
 
 # Route to handle video upload and analysis
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if request.method == 'POST':
         file = request.files['video']
-        joint_a = request.form.get('joint_a', '14')  # Default value '14'
-        joint_b = request.form.get('joint_b', '12')  # Default value '12'
-        joint_c = request.form.get('joint_c', '24')  # Default value '24'
+        if selected_joints:
+            joint_a = selected_joints['a']
+            joint_b = selected_joints['b']
+            joint_c = selected_joints['c']
+        else:
+            joint_a, joint_b, joint_c = '14', '12', '24'  # Default values
 
         if file:
             video_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
@@ -173,8 +196,10 @@ def results():
     task1_angle_df = pd.read_csv(armor_output_path)
     # Find the maximum value in the 'Degrees' column (2nd column)
     peak_angle = round(task1_angle_df['Degrees'].max(), 2)
+    # Find the minimum value in the 'Degrees' column (2nd column)
+    min_angle = round(task1_angle_df['Degrees'].min(), 2)
 
-    return render_template('results.html', peak_angle=peak_angle)
+    return render_template('results.html', peak_angle=peak_angle, min_angle=min_angle)
 
 # Route to serve the CSV file for download
 @app.route('/download_csv')
@@ -184,5 +209,5 @@ def download_csv():
     return send_from_directory(directory=directory, path=csv_filename, as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(debug=True)
-    #app.run()
+    #app.run(debug=True)
+    app.run()
