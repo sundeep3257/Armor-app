@@ -17,6 +17,7 @@
             height: 100vh;
             margin: 0;
             padding: 20px;
+            position: relative;
         }
 
         .container {
@@ -102,6 +103,14 @@
             max-width: 500px; /* Optional: Limit the maximum width */
             margin: 10px auto;
         }
+
+        .user-guide-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: #750014ff;
+            border: 2px solid #FFF;
+        }
     </style>
 </head>
 
@@ -134,6 +143,8 @@
             <button type="submit">Analyze Video</button>
         </form>
     </div>
+
+    <button class="user-guide-button" onclick="window.location.href='/user_guide'">User Guide</button>
 
     <script>
         const buttons = document.querySelectorAll('.joint-button');
