@@ -42,6 +42,10 @@ def select_joint():
         selected_joints = JOINT_VALUES[joint]
     return jsonify({"success": True, "selected_joint": selected_joints})
 
+@app.route('/user_guide')
+def user_guide():
+    return render_template('userguide.html')
+
 # Route to handle video upload and analysis
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -209,5 +213,5 @@ def download_csv():
     return send_from_directory(directory=directory, path=csv_filename, as_attachment=True)
 
 if __name__ == "__main__":
-    #app.run(debug=True)
-    app.run()
+    app.run(debug=True)
+    #app.run()
