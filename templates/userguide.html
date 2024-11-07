@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #000;
+            color: #FFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: left;
+            background-color: #750014ff;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 80%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        h1, h2 {
+            color: #FFF;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .subsection {
+            margin-left: 20px;
+        }
+
+        p {
+            margin-bottom: 10px;
+            color: #FFF;
+        }
+
+        ul {
+            padding-left: 20px;
+            list-style: disc;
+            color: #FFF;
+        }
+
+        ul li {
+            margin-bottom: 10px;
+        }
+
+        a {
+            color: #FFF;
+            text-decoration: underline;
+        }
+
+        .back-button {
+            display: block;
+            margin: 20px auto 0;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            border: 2px solid #FFF;
+            background-color: transparent;
+            color: #FFF;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #FFF;
+            color: #750014ff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>General Guidelines for Recording Videos</h1>
+
+        <div class="section">
+            <ul>
+                <li>Uploaded videos should be .mp4 files.</li>
+                <li>The camera should be positioned at approximately the same height as the joint being measured. For example, if the right shoulder is being measured and the shoulder is 5 ft from the ground, the camera should also be positioned at a height of 5 ft.</li>
+                <li>A plain background is NOT required. However, only one person can be present in the video. If multiple bodies are present, the software will not be able to identify which one should be assessed.</li>
+                <li>For each motion task, there are three landmark joints that must be visible in every frame of the video. These landmarks are found on the same side of the body as the joint being measured. Landmark joints vary based on the task being assessed and are specified in the subsections below.</li>
+                <li>These landmark joints should remain in the same 2D plane throughout the duration of the video, and this plane should be perpendicular to the view of the camera.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Shoulder Abduction</h2>
+            <div class="subsection">
+                <p>Patient should face the camera.</p>
+                <p>Landmark joints: elbow, shoulder, hip.</p>
+                <p>Sample Video: <a href="https://youtube.com/shorts/MDPZuMV9u04?feature=share" target="_blank">https://youtube.com/shorts/MDPZuMV9u04?feature=share</a></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Shoulder Flexion and Extension</h2>
+            <div class="subsection">
+                <p>Patient should turn 90° away from the camera, such that the shoulder being assessed is closer to the camera than the non-measured shoulder.</p>
+                <p>Landmark joints: elbow, shoulder, hip.</p>
+                <p>Sample Video: <a href="https://youtube.com/shorts/8Il_3eJy878" target="_blank">https://youtube.com/shorts/8Il_3eJy878</a></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Elbow Flexion</h2>
+            <div class="subsection">
+                <p>Patient should turn 90° away from the camera, such that the elbow being assessed is closer to the camera than the non-measured elbow.</p>
+                <p>Landmark joints: wrist, elbow, shoulder.</p>
+                <p>Sample Video: <a href="https://youtube.com/shorts/blwOwgpMao0" target="_blank">https://youtube.com/shorts/blwOwgpMao0</a></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Knee Flexion and Extension</h2>
+            <div class="subsection">
+                <p>Patient should turn 90° away from the camera, such that the knee being assessed is closer to the camera than the non-measured knee.</p>
+                <p>Landmark joints: hip, knee, ankle.</p>
+                <p>Sample Video: <a href="https://youtube.com/shorts/0r30tYFLwK8" target="_blank">https://youtube.com/shorts/0r30tYFLwK8</a></p>
+            </div>
+        </div>
+
+        <a class="back-button" href="/">Back to Home</a>
+    </div>
+</body>
+
+</html>
